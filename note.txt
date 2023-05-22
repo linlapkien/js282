@@ -1,0 +1,8 @@
+* tạo ra tập tin package.json -> npm init -y 
+* Cài đặt các gói module -> npm i <module name> --s
+* Gở cài đặt các gói module -> npm uninstall <module name>
+
+======================================================
+Cài đặt các module trong tập tin package.json: npm i
+
+

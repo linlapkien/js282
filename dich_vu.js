@@ -9,6 +9,8 @@ const fs = require('fs');
 // Khai báo thư viện mongoDB
 const db = require('./mongoDB');
 const sendMail = require('./sendMail');
+// Khai báo thư viện cloudinary
+const imgCloud = require('./cloudinaryImages');
 
 // Xây dựng dịch vụ
 const dich_vu = http.createServer((req, res) => {
@@ -113,9 +115,13 @@ const dich_vu = http.createServer((req, res) => {
         let dsDonhang = JSON.parse(noi_dung_nhan);
         let ket_qua = { Noi_dung: [] };
         dsDonhang.forEach((item) => {
-          let collectionName = 'tivi';
+          let collectionName = 'Tivi';
           collectionName =
-            item.nhom == 2 ? 'food' : item.nhom == 3 ? 'mobile' : 'tivi';
+            item.nhom == 2
+              ? 'Mat_hang'
+              : item.nhom == 3
+              ? 'Dien_thoai'
+              : 'Tivi';
           let filter = {
             Ma_so: item.key,
           };
@@ -184,6 +190,54 @@ const dich_vu = http.createServer((req, res) => {
             res.end(JSON.stringify(ket_qua));
           });
       });
+    } else if (url == '/ImagesDienthoai') {
+      req.on('end', function () {
+        let img = JSON.parse(noi_dung_nhan);
+        let Ket_qua = { Noi_dung: true };
+        // upload img in images ------------------------------
+
+        // let kq = saveMedia(img.name, img.src);
+        // if (kq == 'OK') {
+        //   res.writeHead(200, { 'Content-Type': 'text/json; charset=utf-8' });
+        //   res.end(JSON.stringify(Ket_qua));
+        // } else {
+        //   Ket_qua.Noi_dung = false;
+        //   res.writeHead(200, { 'Content-Type': 'text/json; charset=utf-8' });
+        //   res.end(JSON.stringify(Ket_qua));
+        // }
+
+        // upload img host cloudinary ------------------------------
+
+        imgCloud
+          .UPLOAD_CLOUDINARY(img.name, img.src)
+          .then((result) => {
+            console.log(result);
+            res.end(JSON.stringify(Ket_qua));
+          })
+          .catch((err) => {
+            Ket_qua.Noi_dung = false;
+            res.end(JSON.stringify(Ket_qua));
+          });
+      });
+    } else if (url == '/SuaDienthoai') {
+      req.on('end', function () {
+        let mobile = JSON.parse(noi_dung_nhan);
+        let ket_qua = { Noi_dung: true };
+        db.updateOne('Dien_thoai', mobile.condition, mobile.update)
+          .then((result) => {
+            console.log(result);
+            res.writeHead(200, { 'Content-Type': 'text/json;charset=utf-8' });
+            res.end(JSON.stringify(ket_qua));
+          })
+          .catch((err) => {
+            console.log(err);
+            ket_qua.Noi_dung = false;
+            res.writeHead(200, { 'Content-Type': 'text/json;charset=utf-8' });
+            res.end(JSON.stringify(ket_qua));
+          });
+      });
+    } else {
+      res.end(JSON.stringify(result));
     }
   } else {
     res.end(JSON.stringify(result));
@@ -193,3 +247,30 @@ const dich_vu = http.createServer((req, res) => {
 dich_vu.listen(port, () => {
   console.log(`Service Runing http://localhost:${port}`);
 });
+
+//Upload Images
+const decodeBase64Image = (dataString) => {
+  var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
+    response = {};
+
+  if (matches.length !== 3) {
+    return new Error('Error ...');
+  }
+
+  response.type = matches[1];
+  response.data = new Buffer(matches[2], 'base64');
+
+  return response;
+};
+
+const saveMedia = (Ten, Chuoi_nhi_phan) => {
+  var Kq = 'OK';
+  try {
+    var Nhi_phan = decodeBase64Image(Chuoi_nhi_phan);
+    var Duong_dan = 'images//' + Ten;
+    fs.writeFileSync(Duong_dan, Nhi_phan.data);
+  } catch (Loi) {
+    Kq = Loi.toString();
+  }
+  return Kq;
+};

@@ -25,6 +25,11 @@ const dich_vu = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'text/json;charset=utf-8' });
         res.end(JSON.stringify(result));
       });
+    } else if (url == '/furnitureList') {
+      db.getAll('Furniture').then((result) => {
+        res.writeHead(200, { 'Content-Type': 'text/json;charset=utf-8' });
+        res.end(JSON.stringify(result));
+      });
     } else if (url == '/dsHocsinh') {
       db.getAll('Hocsinh').then((result) => {
         res.writeHead(200, { 'Content-Type': 'text/json;charset=utf-8' });
